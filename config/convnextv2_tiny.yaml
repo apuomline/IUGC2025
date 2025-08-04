@@ -1,0 +1,39 @@
+model:
+  name: 'convnextv2_unet'
+  arch: 'convnextv2_tiny'  # 使用convnextv2_tiny架构
+
+
+data:
+  train_csv: 'inputs/cross_validation/fold_1/train.csv'
+  train_dir: 'inputs/Labeled_cases'
+  val_csv: 'inputs/cross_validation/fold_1/val.csv'
+  val_dir: 'inputs/Labeled_cases'
+
+heatmap:
+  size: 64
+  sigma: 6.0
+  num_keypoints: 3
+
+# 训练参数
+training:
+  batch_size: 8
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  epochs: 150
+  seed: 42
+
+# 学习率调度器参数
+scheduler:
+  type: 'StepLR'  # 'StepLR', 'ReduceLROnPlateau', 'MultiStepLR', 'CosineAnnealingLR'
+  step_size: 10
+  gamma: 0.90
+  min_lr: 1e-6
+  
+# 保存参数
+save:
+  dir: 'results_heatmap_train_only'
+  interval: 50
+  model_suffix: 'le_260_1'
+  timestamp: false
+  
+###去除xy射线的数据增强，同时减已有的数据增强强度

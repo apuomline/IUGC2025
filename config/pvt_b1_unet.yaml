@@ -1,0 +1,39 @@
+model:
+  name: 'pvt_unet'
+  arch: 'pvt_v2_b1'  # 使用pvt_v2_b1架构
+  
+data:
+  train_csv: 'pse_training_inputs\pse_825_se_100_le_260\train.csv'
+  train_dir: 'pse_training_inputs\pse_825_se_100_le_260\train_imgs'
+  val_csv:  'pse_training_inputs\pse_825_se_100_le_260\val.csv'
+  val_dir: 'pse_training_inputs\pse_825_se_100_le_260\val_imgs'
+
+
+# 热力图参数
+heatmap:
+  size: 64
+  sigma: 6.0
+  num_keypoints: 3
+
+# 训练参数
+training:
+  batch_size: 8
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  epochs: 150
+  seed: 42
+
+# 学习率调度器参数
+scheduler:
+  type: 'StepLR'  # 'StepLR', 'ReduceLROnPlateau', 'MultiStepLR', 'CosineAnnealingLR'
+  step_size: 10
+  gamma: 0.90
+  patience: 3
+  min_lr: 1e-6
+
+save:
+  dir: 'results_heatmap_train_only'
+  interval: 50
+  model_suffix: 'no_mixup_pse_825_se_100_le_260_3'
+  timestamp: false
+

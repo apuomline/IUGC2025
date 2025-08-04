@@ -1,0 +1,50 @@
+model:
+  name: 'densenet_unet'
+  arch: 'densenet121'  # 使用pvt_v2_b1架构
+
+
+data:
+  train_csv: 'inputs\cross_validation\fold_1\train.csv'
+  train_dir: 'inputs\Labeled_cases'
+  val_csv:  'inputs\cross_validation\fold_1\val.csv'
+  val_dir: 'inputs\Labeled_cases'
+
+
+# 热力图参数
+heatmap:
+  size: 64
+  sigma: 6.0
+  num_keypoints: 3
+
+# 训练参数
+training:
+  batch_size: 8
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  epochs: 150
+  seed: 42
+
+# 学习率调度器参数
+scheduler:
+  type: 'StepLR'  # 'StepLR', 'ReduceLROnPlateau', 'MultiStepLR', 'CosineAnnealingLR'
+  step_size: 10
+  gamma: 0.90
+  patience: 3
+  min_lr: 1e-6
+
+save:
+  dir: 'results_heatmap_train_only'
+  interval: 50
+  model_suffix: ' mixup_le240_entropy_1_flod1'
+  timestamp: false
+
+
+# mixup_alpha: 0.2
+# mixup_prob: 0.90
+# mixup_final_prob: 0.1
+
+# 熵与温度缩放相关参数
+entropy_distance_thr: 5.0
+temperature: 1.0
+entropy_save_path: entropy_stats.npy
+entropy_json_path: entropy_thresholds.json

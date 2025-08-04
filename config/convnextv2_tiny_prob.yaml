@@ -1,0 +1,42 @@
+model:
+  name: 'convnextv2_unet'
+  arch: 'convnextv2_tiny'  # 使用convnextv2_tiny架构
+  # deep_supervision_layers: null  # 监督layer3和layer4
+  # fusion_mode: null  # 使用特征融合
+  # decoder_dropout: [0.05, 0.1, 0.2, 0.3, 0.5]
+  # use_dark: True
+
+
+data:
+  train_csv: pse_training_inputs\pse_825_se_100_le_260\train.csv
+  train_dir: pse_training_inputs\pse_825_se_100_le_260\train_imgs
+  val_csv: pse_training_inputs\pse_825_se_100_le_260\val.csv
+  val_dir: pse_training_inputs\pse_825_se_100_le_260\val_imgs
+
+heatmap:
+  size: 64
+  sigma: 6.0
+  num_keypoints: 3
+
+training:
+  batch_size: 8
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  epochs: 150
+  seed: 42
+
+scheduler:
+  type: 'StepLR'  # 'StepLR', 'ReduceLROnPlateau', 'MultiStepLR', 'CosineAnnealingLR'
+  step_size: 10
+  gamma: 0.90
+  patience: 3
+  min_lr: 1e-6
+save:
+  dir: 'results_pseudo_dataset_trained'
+  interval: 50
+  model_suffix: 'mixup_pse_825_se_100_le_260_prob_1'
+  timestamp: false
+
+mixup_alpha: 0.2
+mixup_prob: 0.90
+mixup_final_prob: 0.1
