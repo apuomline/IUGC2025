@@ -34,30 +34,12 @@
 ---
 
 ## 环境与安装
-
-建议使用 Python 3.8+ 与 PyTorch（支持 GPU/CUDA）。以下提供 Conda 快速环境示例（可按需调整版本）：
-
-安装 PyTorch 请参考 [官方安装向导](https://pytorch.org/get-started/locally/)。
-
 ```bash
 # 创建环境
-conda create -n iugc2025 python=3.10 -y
-conda activate iugc2025
-
-# 安装 PyTorch（根据你的 CUDA 版本选择合适指令）
-# 例如 CUDA 12.x:
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-
-# 常用依赖（按实际代码增减）
-pip install numpy pandas pyyaml opencv-python tqdm scikit-image albumentations matplotlib
-```
-
-如仓库包含 `requirements.txt`，也可直接：
-
-```bash
+conda create -n uni python=3.10
+conda activate uni
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118  
 pip install -r requirements.txt
-```
-
 ---
 
 ## 数据准备
