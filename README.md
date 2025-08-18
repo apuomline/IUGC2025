@@ -35,31 +35,6 @@ This repository contains the deep learning project and materials submitted to a 
 
 ## Environment & Installation
 
-Python 3.8+ and PyTorch with GPU/CUDA are recommended. Below is a quick setup using Conda (adjust versions as needed).
-
-Refer to the official PyTorch guide: [Get Started Locally](https://pytorch.org/get-started/locally/).
-
-```bash
-# Create environment
-conda create -n iugc2025 python=3.10 -y
-conda activate iugc2025
-
-# Install PyTorch (pick the right command for your CUDA version)
-# Example for CUDA 12.x
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
-
-# Common dependencies (customize based on actual code)
-pip install numpy pandas pyyaml opencv-python tqdm scikit-image albumentations matplotlib
-```
-
-If the repository includes a `requirements.txt`, you can simply run:
-
-```bash
-pip install -r requirements.txt
-```
-
-Optional example for CUDA 11.8 with torchaudio:
-
 ```bash
 conda create -n uni python=3.10 -y
 conda activate uni
@@ -189,14 +164,6 @@ If there is a dedicated inference or packaging script (e.g., `inference.py`), ve
 
 ---
 
-## FAQ
-
-- **Windows path separators**: Examples use `\\`. You may also use raw strings or forward slashes `/` (supported by Python).
-- **CUDA OOM**: Reduce `training.batch_size`, or use smaller inputs/cropping.
-- **Learning rate and convergence**: Tune `training.learning_rate` and `scheduler.*` in the YAML; monitor validation metrics.
-- **MixUp configuration**: Decrease `mixup_prob` or adjust `mixup_final_prob` if you want less perturbation later in training.
-
----
 
 ## License & Acknowledgements
 
