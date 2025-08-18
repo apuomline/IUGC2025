@@ -1,39 +1,64 @@
-## 项目简介
+## Project Overview
 
-本仓库为 MICCAI 相关挑战赛（IUGC2025）提交的深度学习项目代码与材料。项目采用 `DenseNet121-UNet` 热力图回归方案进行关键点/目标的定位学习，支持 MixUp 增强与学习率调度。训练流程通过单一配置文件驱动，使用者只需正确设置配置文件即可启动训练与复现实验。
+This repository contains the deep learning project and materials submitted to a MICCAI-related challenge (IUGC2025). The project adopts a `DenseNet121-UNet` heatmap regression scheme for keypoint/target localization, with MixUp augmentation and learning-rate scheduling. The entire training pipeline is configuration-driven: set the YAML config properly and you can start training and reproduce results.
 
-### 主要特性
-- **配置驱动**：通过 `codes/config/*.yaml` 完整配置模型、数据、训练与保存策略。
-- **可复现实验**：固定随机种子，提供最终使用的模型权重与教师模型权重。
-- **热力图监督**：内置高斯热力图生成参数（尺寸、sigma、关键点数）。
-- **增强策略**：支持 MixUp 概率与系数动态控制。
+### Key Features
+- **Config-driven**: Everything is controlled by `codes/config/*.yaml` (model, data, training, saving, etc.).
+- **Reproducible experiments**: Fixed random seed; final model weights and teacher model weights are provided.
+- **Heatmap supervision**: Built-in Gaussian heatmap generation (size, sigma, number of keypoints).
+- **Augmentation**: MixUp with configurable probability and alpha scheduling.
 
 ---
 
-## 目录结构
+## Directory Structure
 
 ```text
 .
-├─ codes/                        # 源代码
-│  ├─ config/                    # 训练/推理配置文件（YAML）
+├─ codes/                        # Source code
+│  ├─ config/                    # Training/inference configs (YAML)
 │  │  └─ densenet_121_unet_prob.yaml
-│  ├─ models/                    # 模型定义
-│  └─ heatmap_train_only_3_mixup_prob_moda.py  # 最终训练脚本
+│  ├─ models/                    # Model definitions
+│  └─ heatmap_train_only_3_mixup_prob_moda.py  # Final training script
 │
-├─ datasets/                     # 数据集（训练/验证）
+├─ datasets/                     # Datasets (train/val)
 │
-├─ pse_se_csvs/                  # 伪标签筛选产物
-│  └─ unlabeled_ex_imgs_threshold_60_fliter2.csv  # 最终使用的未标注图像标注文件
+├─ pse_se_csvs/                  # Pseudo-label filtering outputs
+│  └─ unlabeled_ex_imgs_threshold_60_fliter2.csv  # Final annotations for unlabeled images
 │
-├─ trained_model_pths/           # 模型权重（训练得到/教师模型）
+├─ trained_model_pths/           # Model weights (final and teacher)
 │
 └─ final_test_submmit_files/
-   └─ F56/                       # 最终测试提交文件夹
+   └─ F56/                       # Final test submission folder
 ```
 
 ---
 
-## 环境与安装
+## Environment & Installation
+
+Python 3.8+ and PyTorch with GPU/CUDA are recommended. Below is a quick setup using Conda (adjust versions as needed).
+
+Refer to the official PyTorch guide: [Get Started Locally](https://pytorch.org/get-started/locally/).
+
+```bash
+# Create environment
+conda create -n iugc2025 python=3.10 -y
+conda activate iugc2025
+
+# Install PyTorch (pick the right command for your CUDA version)
+# Example for CUDA 12.x
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# Common dependencies (customize based on actual code)
+pip install numpy pandas pyyaml opencv-python tqdm scikit-image albumentations matplotlib
+```
+
+If the repository includes a `requirements.txt`, you can simply run:
+
+```bash
+pip install -r requirements.txt
+```
+
+Optional example for CUDA 11.8 with torchaudio:
 
 ```bash
 conda create -n uni python=3.10 -y
@@ -41,22 +66,23 @@ conda activate uni
 pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install -r requirements.txt
 ```
+
 ---
 
-## 数据准备
+## Data Preparation
 
-- 将训练/验证数据放置于 `datasets/` 或自定义目录。
-- 将对应的 `train_csv`、`val_csv` 及图像目录路径配置到 YAML 配置中。
-- 伪标签相关文件位于 `pse_se_csvs/`，最终使用的未标注图像标注文件为：
+- Place training/validation data under `datasets/` or a custom directory.
+- Set `train_csv`, `val_csv`, and image directories in the YAML config to match your data.
+- Pseudo-label related files are under `pse_se_csvs/`. The final annotation file for unlabeled images is:
   - `pse_se_csvs/unlabeled_ex_imgs_threshold_60_fliter2.csv`
 
-CSV 的字段格式请与实际代码实现保持一致（通常包含图像路径/文件名与标注信息）。若你的 CSV 在其他目录，请在配置文件中相应修改路径。
+Ensure your CSV schema matches the code expectations (typically includes image path/filename and annotations). If your CSVs live elsewhere, update the config paths accordingly.
 
 ---
 
-## 配置文件说明（示例）
+## Config File Overview (Example)
 
-以 `codes/config/densenet_121_unet_prob.yaml` 为例，核心字段说明：
+Take `codes/config/densenet_121_unet_prob.yaml` as an example:
 
 ```yaml
 model:
@@ -70,9 +96,9 @@ data:
   val_dir:   'pse_training_inputs\pse_825_se_100_le_220_unimatched_37\val_imgs'
 
 heatmap:
-  size: 64          # 热力图尺寸
-  sigma: 6.0        # 高斯核 sigma
-  num_keypoints: 3  # 关键点数量
+  size: 64          # Heatmap size
+  sigma: 6.0        # Gaussian sigma
+  num_keypoints: 3  # Number of keypoints
 
 training:
   batch_size: 8
@@ -99,78 +125,87 @@ mixup_prob: 1.0
 mixup_final_prob: 0.1
 ```
 
-- **model**: 模型名称与主干网络架构。
-- **data**: 训练/验证 CSV 与图像目录路径（相对或绝对路径均可）。
-- **heatmap**: 热力图监督参数（尺寸、sigma、关键点个数）。
-- **training**: 批大小、初始学习率、权重衰减、训练轮数、随机种子等。
-- **scheduler**: 学习率调度策略与其超参（StepLR/ReduceLROnPlateau/MultiStepLR/CosineAnnealingLR）。
-- **save**: 模型保存目录、保存间隔、文件后缀与是否追加时间戳。
-- **mixup_***: MixUp 增强的初始概率与训练后期概率、alpha 系数等。
+- **model**: Model name and backbone architecture.
+- **data**: Train/val CSV files and image directories (relative or absolute paths).
+- **heatmap**: Supervision parameters (size, sigma, number of keypoints).
+- **training**: Batch size, initial learning rate, weight decay, epochs, random seed, etc.
+- **scheduler**: LR scheduler type and hyperparameters (StepLR/ReduceLROnPlateau/MultiStepLR/CosineAnnealingLR).
+- **save**: Output directory, checkpoint interval, filename suffix, and whether to append timestamps.
+- **mixup_***: MixUp probabilities and alpha scheduling.
 
-> 只需根据你的数据与实验需求修改该 YAML，即可直接启动训练。
+> Update the YAML to match your data and experimental needs, then start training directly.
 
 ---
 
-## 训练
+## Training
 
-默认训练入口脚本：`codes/heatmap_train_only_3_mixup_prob_moda.py`
+Main training entry script: `codes/heatmap_train_only_3_mixup_prob_moda.py`
 
-从仓库根目录启动（推荐）：
+From repository root (recommended):
 
 ```bash
-# 方式一：显式指定配置文件路径
+# Option 1: Specify config path explicitly
 python codes/heatmap_train_only_3_mixup_prob_moda.py --config codes/config/densenet_121_unet_prob.yaml
 
-# 方式二：脚本内部有默认配置时，可直接运行（如实现支持）
+# Option 2: If the script has a default config, run directly (if supported)
 python codes/heatmap_train_only_3_mixup_prob_moda.py
 ```
 
-或进入 `codes/` 目录后运行：
+Or from within the `codes/` directory:
 
 ```bash
 cd codes
 python heatmap_train_only_3_mixup_prob_moda.py --config config\densenet_121_unet_prob.yaml
 ```
 
-训练过程中的日志与权重会保存至配置中的 `save.dir`，并按 `save.interval` 周期性写入；最终模型文件名将包含 `save.model_suffix`。
+Logs and checkpoints will be saved under `save.dir` as specified in the config, at the frequency of `save.interval`. Final model filenames will include `save.model_suffix`.
 
 ---
 
-## 模型权重
+## Model Weights
 
-- `trained_model_pths/` 内包含：
-  - **最终推理所用权重**：用于生成提交结果；
-  - **初始教师模型权重**：用于伪标签筛选阶段。
+- Under `trained_model_pths/` you will find:
+  - **Final weights for inference**: used to produce submission results.
+  - **Initial teacher model weights**: used during pseudo-label filtering.
 
-如需从头训练，可忽略该目录；如需复现实验或直接推理，请在推理脚本/配置中指向相应权重路径。
-
----
-
-## 推理与最终提交
-
-- 最终测试提交文件夹：`final_test_submmit_files/F56/`
-  - 按竞赛平台/评测环境要求，将该文件夹及所需权重打包/上传；
-  - 如需本地推理，请参照该目录内的脚本与说明（将权重路径指向 `trained_model_pths/` 中的最终模型）。
-
-若仓库包含独立的推理脚本/入口（例如 `inference.py` 或提交打包脚本），请在运行前确认配置中数据与权重路径的正确性。
+If training from scratch, you may ignore this directory. For reproduction or direct inference, point your scripts/config to the appropriate paths here.
 
 ---
 
-## 复现实验与随机性
+## Inference & Final Submission
 
-- 默认随机种子：`training.seed = 42`。
-- 为了可复现，建议固定：随机数种子、CUDA 相关环境、数据划分与依赖版本。
+- Final submission folder: `final_test_submmit_files/F56/`
+  - Package/upload this folder along with required weights according to the competition platform/evaluator.
+  - For local inference, follow the scripts/instructions in this folder (point the weight path to the final model under `trained_model_pths/`).
 
-
-
-## 致谢与许可证
-
-- 本项目基于 PyTorch 等开源组件，感谢其社区贡献。
-- 参考实现与思路启发： [Noisy Student (Google Research)](https://github.com/google-research/noisystudent)
-- 许可证（License）：请根据仓库实际 `LICENSE` 文件为准；如未提供，默认保留所有权利（All rights reserved）。
+If there is a dedicated inference or packaging script (e.g., `inference.py`), verify all data and weight paths before running.
 
 ---
 
-## 联系方式
+## Reproducibility
 
-如有问题或合作意向，欢迎在 Issues 中反馈或直接联系项目维护者。
+- Default random seed: `training.seed = 42`.
+- For better reproducibility, fix seeds, CUDA/cudnn settings, dataset splits, and dependency versions.
+
+---
+
+## FAQ
+
+- **Windows path separators**: Examples use `\\`. You may also use raw strings or forward slashes `/` (supported by Python).
+- **CUDA OOM**: Reduce `training.batch_size`, or use smaller inputs/cropping.
+- **Learning rate and convergence**: Tune `training.learning_rate` and `scheduler.*` in the YAML; monitor validation metrics.
+- **MixUp configuration**: Decrease `mixup_prob` or adjust `mixup_final_prob` if you want less perturbation later in training.
+
+---
+
+## License & Acknowledgements
+
+- Built upon PyTorch and other open-source components—thanks to their communities.
+- Reference and inspiration: [Noisy Student (Google Research)](https://github.com/google-research/noisystudent)
+- License: please refer to the repository `LICENSE`. If absent, all rights reserved by default.
+
+---
+
+## Contact
+
+For questions or collaboration, please open an issue or contact the maintainers directly. 
