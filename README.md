@@ -161,16 +161,7 @@ python heatmap_train_only_3_mixup_prob_moda.py --config config\densenet_121_unet
 - 默认随机种子：`training.seed = 42`。
 - 为了可复现，建议固定：随机数种子、CUDA 相关环境、数据划分与依赖版本。
 
----
 
-## 常见问题（FAQ）
-
-- **Windows 路径分隔符**：示例中使用 `\\`。也可使用原始字符串或正斜杠 `/`（Python 可兼容）。
-- **CUDA 显存不足**：尝试减小 `training.batch_size`，或使用更小输入尺寸/裁剪策略。
-- **学习率与收敛**：可在 YAML 中微调 `training.learning_rate`、`scheduler.*`，并观察验证集指标变化。
-- **MixUp 配置**：适当降低 `mixup_prob` 或调整 `mixup_final_prob`，以减弱后期扰动。
-
----
 
 ## 致谢与许可证
 
