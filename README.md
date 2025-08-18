@@ -34,12 +34,39 @@
 ---
 
 ## 环境与安装
+
+建议使用 Python 3.8+ 与 PyTorch（支持 GPU/CUDA）。以下提供 Conda 快速环境示例（可按需调整版本）：
+
+安装 PyTorch 请参考 [官方安装向导](https://pytorch.org/get-started/locally/)。
+
 ```bash
 # 创建环境
-conda create -n uni python=3.10
-conda activate uni
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118  
+conda create -n iugc2025 python=3.10 -y
+conda activate iugc2025
+
+# 安装 PyTorch（根据你的 CUDA 版本选择合适指令）
+# 例如 CUDA 12.x:
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+
+# 常用依赖（按实际代码增减）
+pip install numpy pandas pyyaml opencv-python tqdm scikit-image albumentations matplotlib
+```
+
+如仓库包含 `requirements.txt`，也可直接：
+
+```bash
 pip install -r requirements.txt
+```
+
+或使用 CUDA 11.8 与 torchaudio 的安装示例：
+
+```bash
+conda create -n uni python=3.10 -y
+conda activate uni
+pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+pip install -r requirements.txt
+```
+
 ---
 
 ## 数据准备
@@ -162,12 +189,19 @@ python heatmap_train_only_3_mixup_prob_moda.py --config config\densenet_121_unet
 
 ---
 
+## 常见问题（FAQ）
+
+- **Windows 路径分隔符**：示例中使用 `\\`。也可使用原始字符串或正斜杠 `/`（Python 可兼容）。
+- **CUDA 显存不足**：尝试减小 `training.batch_size`，或使用更小输入尺寸/裁剪策略。
+- **学习率与收敛**：可在 YAML 中微调 `training.learning_rate`、`scheduler.*`，并观察验证集指标变化。
+- **MixUp 配置**：适当降低 `mixup_prob` 或调整 `mixup_final_prob`，以减弱后期扰动。
+
 ---
 
 ## 致谢与许可证
 
 - 本项目基于 PyTorch 等开源组件，感谢其社区贡献。
-- https://github.com/google-research/noisystudent
+- 参考实现与思路启发： [Noisy Student (Google Research)](https://github.com/google-research/noisystudent)
 - 许可证（License）：请根据仓库实际 `LICENSE` 文件为准；如未提供，默认保留所有权利（All rights reserved）。
 
 ---
