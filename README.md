@@ -211,7 +211,7 @@ IUGC2025/
 
 - 感谢 IUGC 2025 挑战赛主办方（奥克兰大学 / 暨南大学）提供数据与竞赛平台；
 - 半监督框架参考：[Self-training with Noisy Student Improves ImageNet Classification](https://arxiv.org/abs/1911.04252)（Google Research）与 [Noisy Student 官方实现](https://github.com/google-research/noisystudent)；
-- 数据增强与调参思路部分借鉴历年头颅关键点检测挑战赛优胜方案，并针对超声图像特点进行了适配与简化。
+- 数据增强与调参思路部分借鉴历年头颅关键点检测挑战赛优胜方案。
 
 ---
 
