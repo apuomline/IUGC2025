@@ -1,178 +1,48 @@
-## Project Overview
+# IUGC 2025 · 基于 DenseNet121-UNet 热图回归的产程超声关键点定位
 
-This repository contains the deep learning project and materials submitted to a MICCAI-related challenge (IUGC2025). The project adopts a `DenseNet121-UNet` heatmap regression scheme for keypoint/target localization, with MixUp augmentation and learning-rate scheduling. The entire training pipeline is configuration-driven: set the YAML config properly and you can start training and reproduce results.
+本项目是我们参加 **MICCAI 2025 产程超声大挑战（IUGC 2025）** 的官方实现。项目采用 **DenseNet121-UNet 热图回归** 方案进行关键点定位，并结合 MixUp 数据增强与学习率调度策略。整个训练流程由配置文件驱动——只需正确设置 YAML 配置，即可启动训练并复现我们的提交结果。
 
-### Key Features
-- **Config-driven**: Everything is controlled by `codes/config/*.yaml` (model, data, training, saving, etc.).
-- **Reproducible experiments**: Fixed random seed; final model weights and teacher model weights are provided.
-- **Heatmap supervision**: Built-in Gaussian heatmap generation (size, sigma, number of keypoints).
-- **Augmentation**: MixUp with configurable probability and alpha scheduling.
+## 📑 目录
 
----
-
-## Directory Structure
-
-```text
-.
-├─ codes/                        # Source code
-│  ├─ config/                    # Training/inference configs (YAML)
-│  │  └─ densenet_121_unet_prob.yaml
-│  ├─ models/                    # Model definitions
-│  └─ heatmap_train_only_3_mixup_prob_moda.py  # Final training script
-│
-├─ datasets/                     # Datasets (train/val)
-│
-├─ pse_se_csvs/                  # Pseudo-label filtering outputs
-│  └─ unlabeled_ex_imgs_threshold_60_fliter2.csv  # Final annotations for unlabeled images
-│
-├─ trained_model_pths/           # Model weights (final and teacher)
-│
-└─ final_test_submmit_files/
-   └─ F56/                       # Final test submission folder
-```
+- [项目简介](#项目简介)
+- [核心特性](#核心特性)
+- [目录结构](#目录结构)
+- [环境与安装](#环境与安装)
+- [数据准备](#数据准备)
+- [配置文件说明](#配置文件说明)
+- [模型训练](#模型训练)
+- [模型权重](#模型权重)
+- [推理与最终提交](#推理与最终提交)
+- [可复现性](#可复现性)
+- [许可证与致谢](#许可证与致谢)
+- [联系方式](#联系方式)
 
 ---
 
-## Environment & Installation
+## 项目简介
 
-```bash
-conda create -n uni python=3.10 -y
-conda activate uni
-pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-pip install -r requirements.txt
-```
+本仓库包含我们提交至 MICCAI 相关挑战赛 **IUGC 2025** 的深度学习项目及全部材料。与直接回归关键点坐标不同，本方案让模型预测每个关键点对应的高斯热图，再通过热图的极值点得到最终定位结果——这种方式对于标志点细微、解剖先验重要的超声图像更加鲁棒。
 
----
+方法概要：
 
-## Data Preparation
+| 组件 | 说明 |
+| --- | --- |
+| 骨干网络 | DenseNet121 编码器 + U-Net 风格解码器 |
+| 监督方式 | 每个关键点生成高斯热图（`size`、`sigma` 可配置） |
+| 数据增强 | MixUp，概率与 alpha 均支持调度 |
+| 优化策略 | Adam + StepLR（通过配置文件可切换其他调度器） |
+| 伪标签 | 类 Noisy Student 的教师模型推理 + 无标注数据置信度过滤 |
+| 可复现性 | 固定随机种子，提供教师模型与最终模型权重 |
 
-- Place training/validation data under `datasets/` or a custom directory.
-- Set `train_csv`, `val_csv`, and image directories in the YAML config to match your data.
-- Pseudo-label related files are under `pse_se_csvs/`. The final annotation file for unlabeled images is:
-  - `pse_se_csvs/unlabeled_ex_imgs_threshold_60_fliter2.csv`
+参考实现灵感来源：[Noisy Student (Google Research)](https://github.com/google-research/noisystudent)。
 
-Ensure your CSV schema matches the code expectations (typically includes image path/filename and annotations). If your CSVs live elsewhere, update the config paths accordingly.
+## 核心特性
 
----
+- **配置驱动**：模型、数据路径、训练超参数、保存策略等全部由 `codes/config/*.yaml` 控制。
+- **实验可复现**：固定随机种子；提供最终模型权重和教师模型权重。
+- **热图监督**：内置高斯热图生成，热图尺寸、sigma、关键点数量均可配置。
+- **MixUp 增强**：概率与 alpha 调度均可配置。
+- **伪标签流程**：无标注数据过滤阶段的 CSV 输出文件随仓库一并提供。
 
-## Config File Overview (Example)
+## 目录结构
 
-Take `codes/config/densenet_121_unet_prob.yaml` as an example:
-
-```yaml
-model:
-  name: 'densenet_unet'
-  arch: 'densenet121'
-
-data:
-  train_csv: 'pse_training_inputs\pse_825_se_100_le_220_unimatched_37\train_320.csv'
-  train_dir: 'pse_training_inputs\pse_825_se_100_le_220_unimatched_37\train_imgs'
-  val_csv:   'pse_training_inputs\pse_825_se_100_le_220_unimatched_37\val_80.csv'
-  val_dir:   'pse_training_inputs\pse_825_se_100_le_220_unimatched_37\val_imgs'
-
-heatmap:
-  size: 64          # Heatmap size
-  sigma: 6.0        # Gaussian sigma
-  num_keypoints: 3  # Number of keypoints
-
-training:
-  batch_size: 8
-  learning_rate: 1e-4
-  weight_decay: 1e-4
-  epochs: 150
-  seed: 42
-
-scheduler:
-  type: 'StepLR'
-  step_size: 10
-  gamma: 0.90
-  patience: 3
-  min_lr: 1e-6
-
-save:
-  dir: 'results_heatmap_train_only'
-  interval: 50
-  model_suffix: 'mixup_prob_pse825_100_le_220_10_01'
-  timestamp: false
-
-mixup_alpha: 0.20
-mixup_prob: 1.0
-mixup_final_prob: 0.1
-```
-
-- **model**: Model name and backbone architecture.
-- **data**: Train/val CSV files and image directories (relative or absolute paths).
-- **heatmap**: Supervision parameters (size, sigma, number of keypoints).
-- **training**: Batch size, initial learning rate, weight decay, epochs, random seed, etc.
-- **scheduler**: LR scheduler type and hyperparameters (StepLR/ReduceLROnPlateau/MultiStepLR/CosineAnnealingLR).
-- **save**: Output directory, checkpoint interval, filename suffix, and whether to append timestamps.
-- **mixup_***: MixUp probabilities and alpha scheduling.
-
-> Update the YAML to match your data and experimental needs, then start training directly.
-
----
-
-## Training
-
-Main training entry script: `codes/heatmap_train_only_3_mixup_prob_moda.py`
-
-From repository root (recommended):
-
-```bash
-# Option 1: Specify config path explicitly
-python codes/heatmap_train_only_3_mixup_prob_moda.py --config codes/config/densenet_121_unet_prob.yaml
-
-# Option 2: If the script has a default config, run directly (if supported)
-python codes/heatmap_train_only_3_mixup_prob_moda.py
-```
-
-Or from within the `codes/` directory:
-
-```bash
-cd codes
-python heatmap_train_only_3_mixup_prob_moda.py --config config\densenet_121_unet_prob.yaml
-```
-
-Logs and checkpoints will be saved under `save.dir` as specified in the config, at the frequency of `save.interval`. Final model filenames will include `save.model_suffix`.
-
----
-
-## Model Weights
-
-- Under `trained_model_pths/` you will find:
-  - **Final weights for inference**: used to produce submission results.
-  - **Initial teacher model weights**: used during pseudo-label filtering.
-
-If training from scratch, you may ignore this directory. For reproduction or direct inference, point your scripts/config to the appropriate paths here.
-
----
-
-## Inference & Final Submission
-
-- Final submission folder: `final_test_submmit_files/F56/`
-  - Package/upload this folder along with required weights according to the competition platform/evaluator.
-  - For local inference, follow the scripts/instructions in this folder (point the weight path to the final model under `trained_model_pths/`).
-
-If there is a dedicated inference or packaging script (e.g., `inference.py`), verify all data and weight paths before running.
-
----
-
-## Reproducibility
-
-- Default random seed: `training.seed = 42`.
-- For better reproducibility, fix seeds, CUDA/cudnn settings, dataset splits, and dependency versions.
-
----
-
-
-## License & Acknowledgements
-
-- Built upon PyTorch and other open-source components—thanks to their communities.
-- Reference and inspiration: [Noisy Student (Google Research)](https://github.com/google-research/noisystudent)
-- License: please refer to the repository `LICENSE`. If absent, all rights reserved by default.
-
----
-
-## Contact
-
-For questions or collaboration, please open an issue or contact the maintainers directly. 
